@@ -1,0 +1,180 @@
+---
+title: Web SDK
+description: 'The below document will outline how to access, download, and use the innerworks Web SDK.'
+---
+
+<Tip>**Before you attempt to integrate our SDK please read this document in its entirety.**</Tip>
+
+## Accessing the SDK
+
+The innerworks SDK is an npm package and can be found here: [Innerworks-Web-SDK.](https://www.npmjs.com/package/@innerworks-me/iw-auth-sdk)\
+Run the following command in your termianl to install the latest version of the SDK:
+```
+npm i @innerworks-me/iw-auth-sdk
+```
+
+## Steps to Achieve a Successful Integration
+
+<Steps>
+  <Step title="First Step">
+        ### Identifying a Suitable Location to Integrate
+
+        When integrating the Innerworks SDK a suitable location within your site needs to be identified as a suitable integration point.\
+        The below is a non-exhaustive list of considerations to consider when choosing a location:
+
+        <Icon icon="check" size={25} /> When a user leaves the page, it is difficult for them to get back to?\
+        <Icon icon="check" size={25} /> Will all users have to flow through this part of your site (i.e. an Onboarding Flow)?\
+        <Icon icon="check" size={25} /> Is user interaction required on this page (i.e. Typing and Mouse Movement/Click)?
+  </Step>
+  <Step title="Second Step">
+    ### Key Events Required for an Integration
+
+        The Innerworks SDK is designed to sit invisibly in the background to perform metric collection. To ensure optimal performance, the page where the SDK is instantiated should require the user to perform a set of actions. This should include entering text and mouse movements and/or clicks. Typical locations are sign in or sign up pages. 
+        Additionally, there will need to be some event which should be hooked into to trigger the sending of the metrics to the Innerworks API. 
+  </Step>
+  <Step title="Third Step">
+    ### Integrating into your Codebase
+
+    Once you have identified a suitable location on your site, **import the `InnerworksMetrics` object.**
+
+    ```Typescript
+    import { InnerworksMetrics } from "@innerworks/iw-auth-sdk";
+    ```
+
+    **Initialise the InnerworksMetrics object in your page, providing your PROJECT_ID and a css selector of a button on the page.**\
+    This button will trigger the sending of the metrics to the innerworks API and should be after user interaction on the page has taken place.
+    ```Typescript
+    const [innerworksMetrics, setInnerworksMetrics] = useState<InnerworksMetrics>();
+
+    useEffect(() => {
+        setInnerworksMetrics(new InnerworksMetrics("YOUR_PROJECT_ID", "ID_OF_YOUR_BUTTON"));
+    }, [setInnnerworksMetrics]);
+    ```
+
+    **Send Metrics on Button Press**\
+    When the user clicks the button, call `send`, passing in a UUID for the user. This can be an email, username, or wallet address.\
+    A boolean value will be returned indicating the success of the request.
+    ```Typescript
+        if (innerworksMetrics) { // necessary if using typescript
+            const metricsSendSuccess = await innerworksMetrics.send("THE_UNIQUE_ID");
+        }
+    ```
+  </Step>
+</Steps>
+
+## Additional Example Resources
+
+<Tabs>
+  <Tab title="React">
+        ```Typescript
+        import { InnerworksMetrics } from "@innerworks-me/iw-auth-sdk";
+        import { useEffect } from "react";
+
+        export default function YourPage() {
+            const [innerworksMetrics, setInnerworksMetrics] = useState<InnerworksMetrics>();
+            
+            useEffect(() => {
+                setInnerworksMetrics(new InnerworksMetrics(<yourAppId>, "#signin-button"));
+            }, [setInnerworksMetrics]);
+            
+            const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+                e.preventDefault();
+            
+                /*
+                handle form submission here e.g. authentication
+                */
+                
+                if (innerworksMetrics) { // necessary if using typescript
+                    const metricsSendSuccess = await innerworksMetrics.send(<unique-id>);
+                }
+                // optionally handle based on metricsSendSuccess
+            }
+            
+            return (
+                // ... rest of elements
+                    <form onSubmit={handleSubmit}>
+
+                    /* ...
+                    your form elements here
+                    ... */
+
+                    <button type="submit" id="signin-button">
+                </form>
+            )
+        }
+        ```
+  </Tab>
+  <Tab title="Angular">
+    ```Typescript
+    import { AfterViewInit, Component, OnInit } from '@angular/core';
+    import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+    import { InnerworksMetrics } from '@innerworks-me/iw-auth-sdk';
+    import { environment } from 'src/environments/environment';
+
+    @Component({
+    selector: 'app-frontend-flow-demo-page',
+    templateUrl: './frontend-flow-demo-page.component.html',
+    styleUrls: ['./frontend-flow-demo-page.component.css']
+    })
+    export class FrontendFlowDemoPageComponent implements AfterViewInit {
+    userName: string = '';
+    password: string = '';
+    innerworksMetrics: InnerworksMetrics | null = null;
+    authError: string | null = null;
+    authSuccess: boolean = false;
+    loginForm: FormGroup;
+    loading: boolean = false;
+
+    constructor(private fb: FormBuilder) {
+        this.loginForm = this.fb.group({
+        username: ['', Validators.required],
+        password: ['', Validators.required]
+        });
+    }
+
+    ngAfterViewInit(): void {
+        console.log('Initializing InnerworksMetrics with project ID:', environment.FRONTEND_FLOW_PROJECT_ID);
+        this.innerworksMetrics = new InnerworksMetrics(environment.FRONTEND_FLOW_PROJECT_ID, '#signin-button');
+        console.log('InnerworksMetrics initialized:', this.innerworksMetrics);
+    }  
+
+    async handleSubmit() {
+        if (this.loginForm.valid) {
+        this.loading = true;
+        const username = this.loginForm.get('username')?.value;
+        const password = this.loginForm.get('password')?.value;
+
+        const id = this.mockAuthenticator(username, password);
+
+        if (id) {
+            this.authError = null;
+            if (this.innerworksMetrics) {
+            const metricsSendSuccess = await this.innerworksMetrics.send(id);
+            if (metricsSendSuccess) {
+                this.authSuccess = true;
+            } else {
+                this.authError = "Error when sending innerworks metrics";
+            }
+            } else {
+            this.authError = "Innerworks SDK is not defined";
+            }
+        } else {
+            this.authError = "Username or Password Incorrect";
+        }
+        this.loading = false;
+        }
+    }
+
+    mockAuthenticator(username: string, password: string): string | null {
+        if (username === "test-username" && password === "password") {
+        return "mock-user-id";
+        }
+        return null;
+    }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+The link below will take you to a Github repository which has an example integration in both Angular & React.\
+[Innerworks-Demo-Repository](https://github.com/InnerWorks-me/innerworks-demo)
