@@ -19,6 +19,10 @@
     {
       "name": "Support",
       "url": "mailto:hi@mintlify.com"
+    },
+    {
+      "name": "Book a Demo",
+      "url": "https://www.innerworks.me/contact"
     }
   ],
   "tabs": [
@@ -33,8 +37,8 @@
     {
       "group": "Products",
       "pages":[
-        "/products/Web-SDK",
-        "/products/Mobile-SDK"
+        "products/Web-SDK",
+        "products/Mobile-SDK"
       ]
     }
   ],
