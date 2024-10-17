@@ -2,3 +2,90 @@
 title: Mobile SDK
 description: 'Welcome to the home of Innerworks SDK Documentation.'
 ---
+
+<Warning>Currently, we only support Mobile apps written in Ionic...</Warning>
+<Tip>**Before you attempt to integrate our SDK please read this document in its entirety.**</Tip>
+
+## Accessing the SDK
+
+The innerworks Mobile SDK is an npm package and can be found here: [Innerworks-Mobile-SDK.](https://www.npmjs.com/package/@innerworks-me/iw-mobile-auth)\
+Run the following command in your terminal to install the latest version of the SDK:
+```
+npm i @innerworks-me/iw-mobile-auth
+```
+
+## Steps to Achieve a Successful Integration
+
+<Steps>
+  <Step title="First Step">
+        ### Identifying a Suitable Location to Integrate
+
+        When integrating the Innerworks Mobile SDK a suitable location within your mobile applciation needs to be identified as a suitable integration point.\
+        The below is a non-exhaustive list of considerations to consider when choosing a location:
+
+        <Icon icon="check" size={25} /> When a user leaves the page, it is difficult for them to get back to?\
+        <Icon icon="check" size={25} /> Will all users have to flow through this part of your site (i.e. an Onboarding Flow)?\
+        <Icon icon="check" size={25} /> Is user interaction required on this page (i.e. Typing and Screen Clicks)?
+  </Step>
+  <Step title="Second Step">
+    ### Key Events Required for an Integration
+        The Innerworks SDK is designed to sit invisibly in the background to perform metric collection. To ensure optimal performance, the page where the SDK is instantiated should require the user to perform a set of actions. This should include entering text and/or screen clicks. Typical locations are sign in or sign up pages. 
+        Additionally, there will need to be some event which should be hooked into to trigger the sending of the metrics to the Innerworks API. 
+  </Step>
+  <Step title="Third Step">
+    ### Integrating into your Codebase
+
+    Once you have identified a suitable location on your site, **import the `InnerworksMetrics` object.**
+
+    ```Typescript
+    import { Metrics } from '@innerworks-me/iw-mobile-auth';
+    ```
+
+    **Add in text change events on any text fields**\
+    This will trigger tracking of the type of text entered (i.e. Text added or taken away and, the type of text added)
+    ```Typescript
+    async onTextChanged(event: any) {
+        const typedText = event.target.value;
+        const typing = `${typedText}`;
+        this.socialId = typing;
+        try {  
+        await Metrics.textOnChange({typing:typing})
+        .then(result => {
+            console.log("Success on typing", result);
+        })
+        .catch(error => {
+            console.error("Error on typing", error);
+        });
+        } catch (error) {
+        console.error('Error on Metrics plugin', error);
+        }
+    }
+    ```
+
+    ```html
+    <ion-input
+        type="text"
+        [(ngModel)]="socialId"
+        name="socialId"
+        (ionInput)="onTextChanged($event)"
+        required
+        clearInput
+        class="input-field">
+    </ion-input>
+    ```
+
+    **Send Metrics on Button Press**\
+    When the user clicks the button, call `send`, passing in a UUID for the user (called `socialId`). This can be an email, username, or wallet address.\
+    Also pass in your `Project_id`.
+    A boolean value will be returned indicating the success of the request.
+    ```Typescript
+    await Metrics.sendCollectedData({ socialId: this.socialId, projectId: this.projectId })
+        .then((result) => {
+            console.log("Data sent successfully", result);
+        })
+        .catch((error: Error) => {
+            console.error("Error sending data", error);
+    });
+    ```
+  </Step>
+</Steps>
