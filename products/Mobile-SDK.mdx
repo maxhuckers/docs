@@ -47,17 +47,14 @@ npm i @innerworks-me/iw-mobile-auth
     async onTextChanged(event: any) {
         const typedText = event.target.value;
         const typing = `${typedText}`;
-        this.socialId = typing;
         try {  
-        await Metrics.textOnChange({typing:typing})
-        .then(result => {
-            console.log("Success on typing", result);
+            await Metrics.textOnChange({typing:typing})
+            .then(result => {
+                console.log("Success on typing", result);
         })
         .catch(error => {
             console.error("Error on typing", error);
         });
-        } catch (error) {
-        console.error('Error on Metrics plugin', error);
         }
     }
     ```
@@ -79,13 +76,20 @@ npm i @innerworks-me/iw-mobile-auth
     Also pass in your `Project_id`.
     A boolean value will be returned indicating the success of the request.
     ```Typescript
-    await Metrics.sendCollectedData({ socialId: this.socialId, projectId: this.projectId })
-        .then((result) => {
-            console.log("Data sent successfully", result);
-        })
-        .catch((error: Error) => {
-            console.error("Error sending data", error);
-    });
+    Metrics.sendCollectedData({
+        socialId: '12345',
+        projectId: 'ds012w1dk90kw209dks01'
+    })
     ```
   </Step>
 </Steps>
+
+## Additional Functionality
+
+### Setting Optional Data
+
+It is possible to add custom data to your payload.
+
+```Typescript
+Metrics.setOptionalData({ data: 'Some optional data' })
+```
